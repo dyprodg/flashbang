@@ -43,12 +43,4 @@ jobs:
       - run: terraform -chdir=./terraform/infra validate
       - run: terraform -chdir=./terraform/infra apply -auto-approve
       - run: terraform -chdir=./terraform/infra apply -auto-approve
-
-      - name: Get Bucket Name from Terraform Output
-        id: get_bucket_name
-        run: echo "::set-output name=bucket_name::$(terraform output bucket_name)"
-
-      - name: Use Bucket Name
-        run: |
-          BUCKET_NAME=${{ steps.get_bucket_name.outputs.bucket_name }}
-          aws s3 sync --region eu-central-1 ./build "s3://${BUCKET_NAME}/"
+      - run: aws s3 sync --region eu-central-1 ./build s3://dennis-flash-page-bucket-react-2024/
