@@ -1,22 +1,20 @@
 name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions
 on:
   push:
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     steps:
-      - run: echo " The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo " This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - name: Check out repository code
         uses: actions/checkout@v4
-      - run: echo " The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo " The workflow is now ready to test your code on the runner."
+      - run: echo "The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "The workflow is now ready to test your code on the runner."
       - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo " This job's status is ${{ job.status }}."
-      - run: echo " This job's status is ${{ job.status }}."
+        run: ls ${{ github.workspace }}
+      - run: echo "This job's status is ${{ job.status }}."
+      - run: echo "This job's status is ${{ job.status }}."
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
@@ -31,10 +29,26 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: eu-central-1
         run: |
           aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
           aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-          aws configure set default.region eu-central-1
+          aws configure set default.region $AWS_DEFAULT_REGION
 
       - run: aws configure list
       - run: aws s3 ls
+      - uses: hashicorp/setup-terraform@v2
+      - run: terraform version
+      - run: terraform -chdir=./terraform/infra init
+      - run: terraform -chdir=./terraform/infra validate
+      - run: terraform -chdir=./terraform/infra apply -auto-approve
+      - run: terraform -chdir=./infra apply -auto-approve
+
+      - name: Get Bucket Name from Terraform Output
+        id: get_bucket_name
+        run: echo "::set-output name=bucket_name::$(terraform output bucket_name)"
+
+      - name: Use Bucket Name
+        run: |
+          BUCKET_NAME=${{ steps.get_bucket_name.outputs.bucket_name }}
+          aws s3 sync --region eu-central-1 ./build "s3://${BUCKET_NAME}/"
