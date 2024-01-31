@@ -42,7 +42,7 @@ jobs:
       - run: terraform -chdir=./terraform/infra init
       - run: terraform -chdir=./terraform/infra validate
       - run: terraform -chdir=./terraform/infra apply -auto-approve
-      - run: terraform -chdir=./infra apply -auto-approve
+      - run: terraform -chdir=./terraform/infra apply -auto-approve
 
       - name: Get Bucket Name from Terraform Output
         id: get_bucket_name
